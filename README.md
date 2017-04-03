@@ -1,16 +1,10 @@
-**IMPORTANT: If you're running < 1.5.1, please upgrade to the latest version to address 3 security vulnerabilities.
-More details [here](https://github.com/mkdynamic/omniauth-facebook/wiki/CSRF-vulnerability:-CVE-2013-4562), [here](https://github.com/mkdynamic/omniauth-facebook/wiki/Access-token-vulnerability:-CVE-2013-4593) and [here](http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2012-6134).**
-
----
-
 # OmniAuth Facebook &nbsp;[![Build Status](https://secure.travis-ci.org/mkdynamic/omniauth-facebook.svg?branch=master)](https://travis-ci.org/mkdynamic/omniauth-facebook) [![Gem Version](https://img.shields.io/gem/v/omniauth-facebook.svg)](https://rubygems.org/gems/omniauth-facebook)
-
 
 **These notes are based on master, please see tags for README pertaining to specific releases.**
 
 Facebook OAuth2 Strategy for OmniAuth.
 
-Supports the OAuth 2.0 server-side and client-side flows. Read the Facebook docs for more details: http://developers.facebook.com/docs/authentication
+Supports OAuth 2.0 server-side and client-side flows. Read the Facebook docs for more details: http://developers.facebook.com/docs/authentication
 
 ## Installing
 
@@ -55,37 +49,25 @@ For example, to request `email`, `user_birthday` and `read_stream` permissions a
 
 ```ruby
 Rails.application.config.middleware.use OmniAuth::Builder do
-  provider :facebook, ENV['FACEBOOK_KEY'], ENV['FACEBOOK_SECRET'],
-           :scope => 'email,user_birthday,read_stream', :display => 'popup'
+  provider :facebook, ENV['APP_ID'], ENV['APP_SECRET'],
+    scope: 'email,user_birthday,read_stream', display: 'popup'
 end
 ```
 
 ### API Version
 
-OmniAuth Facebook uses unversioned API endpoints by default. You can configure custom endpoints via `client_options` hash passed to `provider`.
+OmniAuth Facebook uses versioned API endpoints by default (current v2.6). You can configure a different version via `client_options` hash passed to `provider`, specifically you should change the version in the `site` and `authorize_url` parameters. For example, to change to v3.0 (assuming that exists):
 
 ```ruby
 use OmniAuth::Builder do
   provider :facebook, ENV['APP_ID'], ENV['APP_SECRET'],
-    :client_options => {
-      :site => 'https://graph.facebook.com/v2.0',
-      :authorize_url => "https://www.facebook.com/v2.0/dialog/oauth"
+    client_options: {
+      site: 'https://graph.facebook.com/v3.0',
+      authorize_url: "https://www.facebook.com/v3.0/dialog/oauth"
     }
 end
 ```
 
-In API version 2.3 Facebook changed OAuth response format which is different from current omniauth-facebook default.  
-If you intend to use this or newer version (which might be a minimum allowed for your app!) you need to provide additional argument to `provider` as shown below.
-
-```ruby
-use OmniAuth::Builder do
-  provider :facebook, ENV['APP_ID'], ENV['APP_SECRET'],
-    :client_options => {
-      ...
-    },
-    token_params: { parse: :json }
-end
-```
 ### Per-Request Options
 
 If you want to set the `display` format, `auth_type`, or `scope` on a per-request basis, you can just pass it to the OmniAuth request phase URL, for example: `/auth/facebook?display=popup` or `/auth/facebook?scope=email`.
@@ -96,38 +78,37 @@ Here's an example *Auth Hash* available in `request.env['omniauth.auth']`:
 
 ```ruby
 {
-  :provider => 'facebook',
-  :uid => '1234567',
-  :info => {
-    :email => 'joe@bloggs.com',
-    :name => 'Joe Bloggs',
-    :first_name => 'Joe',
-    :last_name => 'Bloggs',
-    :image => 'http://graph.facebook.com/1234567/picture?type=square',
-    :urls => { :Facebook => 'http://www.facebook.com/jbloggs' },
-    :location => 'Palo Alto, California',
-    :verified => true
+  provider: 'facebook',
+  uid: '1234567',
+  info: {
+    email: 'joe@bloggs.com',
+    name: 'Joe Bloggs',
+    first_name: 'Joe',
+    last_name: 'Bloggs',
+    image: 'http://graph.facebook.com/1234567/picture?type=square',
+    verified: true
   },
-  :credentials => {
-    :token => 'ABCDEF...', # OAuth 2.0 access_token, which you may wish to store
-    :expires_at => 1321747205, # when the access token expires (it always will)
-    :expires => true # this will always be true
+  credentials: {
+    token: 'ABCDEF...', # OAuth 2.0 access_token, which you may wish to store
+    expires_at: 1321747205, # when the access token expires (it always will)
+    expires: true # this will always be true
   },
-  :extra => {
-    :raw_info => {
-      :id => '1234567',
-      :name => 'Joe Bloggs',
-      :first_name => 'Joe',
-      :last_name => 'Bloggs',
-      :link => 'http://www.facebook.com/jbloggs',
-      :username => 'jbloggs',
-      :location => { :id => '123456789', :name => 'Palo Alto, California' },
-      :gender => 'male',
-      :email => 'joe@bloggs.com',
-      :timezone => -8,
-      :locale => 'en_US',
-      :verified => true,
-      :updated_time => '2011-11-11T06:21:03+0000'
+  extra: {
+    raw_info: {
+      id: '1234567',
+      name: 'Joe Bloggs',
+      first_name: 'Joe',
+      last_name: 'Bloggs',
+      link: 'http://www.facebook.com/jbloggs',
+      username: 'jbloggs',
+      location: { id: '123456789', name: 'Palo Alto, California' },
+      gender: 'male',
+      email: 'joe@bloggs.com',
+      timezone: -8,
+      locale: 'en_US',
+      verified: true,
+      updated_time: '2011-11-11T06:21:03+0000',
+      # ...
     }
   }
 }
@@ -169,16 +150,9 @@ If you use the server-side flow, Facebook will give you back a longer lived acce
 
 ## Supported Rubies
 
-Actively tested with the following Ruby versions:
-
-- MRI 2.2
-- MRI 2.1
-- MRI 2.0.0
-- MRI 1.9.3
-- MRI 1.9.2
-- MRI 1.8.7 (use hashie ~> 2.0.5 in your Gemfile)
-- JRuby 1.7.9
-- Rubinius (latest stable)
+- Ruby MRI (1.9.3+)
+- JRuby (1.9 mode)
+- RBX (2.1.1+)
 
 ## License
 
@@ -189,6 +163,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/mkdynamic/omniauth-facebook/trend.png)](https://bitdeli.com/free "Bitdeli Badge")

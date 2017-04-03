@@ -2,9 +2,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-platforms :ruby_18 do
-  gem 'hashie', '~> 2.0.5'
-end
+gem 'rack', RUBY_VERSION < '2.2.2' ? '~> 1.6' : '>= 2.0'
 
 platforms :rbx do
   gem 'rubysl', '~> 2.0'
